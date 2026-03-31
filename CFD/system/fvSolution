@@ -1,0 +1,148 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-06;
+        relTol          0.1;
+    }
+
+    pFinal
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-06;
+        relTol          0;
+    }
+
+    "(U|k|epsilon|R|nuTilda|Ufinal)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        tolerance       1e-05;
+        relTol          0;
+    }
+
+    "(voidfraction|Ksl|UsNext|voidfractionNext|sSmoothField|vSmoothField|fSmooth)"
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-09;
+        relTol          1e-06;
+    }
+}
+
+PISO
+{
+    nCorrectors     2;
+    nNonOrthogonalCorrectors 0;
+    pRefCell        0;
+    pRefValue       0;
+}
+
+relaxationFactors
+{
+    fields
+    {
+        p               0.3;
+    }
+    equations
+    {
+        U               0.7;
+        k               0.7;
+        epsilon         0.7;
+        R               0.7;
+        nuTilda         0.7;
+    }
+}
+
+    PIMPLE
+    {
+        momentumPredictor yes;
+        nOuterCorrectors 1;
+        nCorrectors 2;
+        nNonOrthogonalCorrectors 1;
+        pRefCell 0;
+        pRefValue 0;
+        rhoMin rhoMin [1 -3 0 0 0 0 0 ] 0.5;
+        rhoMax rhoMax [1 -3 0 0 0 0 0 ] 2.0;
+        residualControl
+        {
+            U
+            {
+                relTol 0;
+                tolerance 1.0E-4;
+            }
+
+            k
+            {
+                relTol 0;
+                tolerance 1.0E-4;
+            }
+
+            epsilon
+            {
+                relTol 0;
+                tolerance 0.0001;
+            }
+
+            omega
+            {
+                relTol 0;
+                tolerance 1.0E-4;
+            }
+
+            nuTilda
+            {
+                relTol 0;
+                tolerance 0.0001;
+            }
+
+            T
+            {
+                relTol 0;
+                tolerance 0.0001;
+            }
+
+            p_rgh
+            {
+                relTol 0;
+                tolerance 0.0001;
+            }
+
+            p
+            {
+                relTol 0;
+                tolerance 1.0E-4;
+            }
+
+            "alpha.*"
+            {
+                relTol 0;
+                tolerance 0.0001;
+            }
+
+        }
+
+    }
+
+
+// ************************************************************************* //

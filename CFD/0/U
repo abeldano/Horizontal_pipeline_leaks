@@ -1,0 +1,48 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX-OS                                                  |
+|   o   O   o      | Version: v2.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class volVectorField;
+    location "0";
+    object U;
+}
+dimensions [ 0 1 -1 0 0 0 0 ];
+internalField uniform (0.0 0.0 0.0);
+boundaryField
+{
+    
+    inlet
+    {
+        type flowRateInletVelocity;
+        value uniform ( 0.0 0.0 0.0 );
+        volumetricFlowRate table
+        (
+            (0.0 0.0)
+            (4.0 0.0004032) // U_max = 2.8 m/s
+        );
+    }
+    
+    surface
+    {
+    	type		noSlip;
+    }
+
+    outlet
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    
+    acrylic
+    {
+        type noSlip;
+    }
+
+}

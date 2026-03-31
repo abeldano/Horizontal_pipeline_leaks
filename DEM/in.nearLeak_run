@@ -1,0 +1,64 @@
+	variable dt	 		equal 1e-5					# timestep 				[sec]
+	variable t_sim			equal 10.0					# time of simulation 			[sec]
+	variable t_set			equal 2					# time to initialise the simulation 	[sec]
+
+	variable st_sim		equal ${t_sim}/${dt}				# steps of simulation 			[]
+	variable st_set		equal ${t_set}/${dt}				# steps to initialise the simulation 	[]
+
+	variable dump_rate 		equal 0.01/${dt}				# rate of writing dump files 		[]
+	variable skin 			equal 4e-3					# contact parameter			[m]
+	variable grav			equal 9.81					# gravitation				[m/s]
+
+	variable youngmod 		equal 5e6					# E-Modul				[Pa]
+	variable poiss 		equal 0.45					# Poisson Ratio			[]
+	variable cor 			equal 0.9					# Coefficent of Restitution		[]
+	variable ff 			equal 0.1					# Particle Sliding Friction		[]
+	variable wallfricW 		equal 0.05					# Particle Wall Friction		[]
+	variable frf 			equal 0.05					# Particle Rolling Friction		[]
+
+	atom_style	granular
+	atom_modify	map array
+	boundary	f f f
+	newton		off
+
+	communicate	single vel yes
+	units	si
+	read_restart 	../DEM/post/restart/liggghts.restart
+
+	neighbor	0.002 bin
+	neigh_modify	delay 0
+
+	fix 		m1 all property/global youngsModulus peratomtype 				${youngmod} ${youngmod} 
+	fix 		m2 all property/global poissonsRatio peratomtype 				${poiss} ${poiss} 
+	fix 		m3 all property/global coefficientRestitution peratomtypepair  2		${cor} ${cor} ${cor} ${cor}  
+	fix 		m4 all property/global coefficientFriction peratomtypepair 2 		${ff}  ${wallfricW} ${wallfricW} 0 			
+	fix 		m5 all property/global coefficientRollingFriction peratomtypepair 2 		${frf}  ${wallfricW} ${wallfricW} 0
+	fix 		m6 all property/global cohesionEnergyDensity peratomtypepair 2 	    	0	0  0     0
+
+	pair_style 	gran model hertz tangential history cohesion off rolling_friction epsd2 		
+	pair_coeff	* *
+
+	timestep	${dt}
+	fix		gravi all gravity ${grav} vector 0.0 0.0 -1.0
+
+	fix		container all mesh/surface/stress file ../DEM/STL/box.stl type 	2 curvature_tolerant no  
+	fix		outlet    all mesh/surface/stress file ../DEM/STL/outlet.stl type  2   curvature_tolerant no 
+	fix		wall all wall/gran model hertz tangential history cohesion off rolling_friction epsd2 mesh n_meshes 1 meshes container
+	variable t 	equal step*dt
+	fix		integr all nve/sphere
+	
+	fix		ts all check/timestep/gran 1000 0.1 0.1
+	compute		rke all erotate/sphere
+	thermo_style	custom time step atoms ke c_rke f_ts[1] f_ts[2] vol
+	thermo		1000
+	thermo_modify	lost ignore norm no
+	compute_modify	thermo_temp dynamic yes
+	
+	dump		ddmpvtk2_pre	all custom/vtk ${dump_rate} ../DEM/post/setParticles_*.vtk id type x y z vx vy vz fx fy fz radius mass
+	run		40000
+	undump          ddmpvtk2_pre
+	fix     	cfd 	all couple/cfd couple_every 50 mpi #50
+	fix     	cfd2 	all couple/cfd/force
+	dump		ddmpvtk2	all custom/vtk ${dump_rate} ../DEM/post/particles_*.vtk id type x y z vx vy vz fx fy fz radius mass
+
+	run 0

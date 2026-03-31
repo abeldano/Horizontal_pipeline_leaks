@@ -1,0 +1,175 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.4                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          couplingProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//===========================================================================//
+// sub-models & settings
+modelType A;
+
+couplingInterval 50;
+
+voidFractionModel divided;
+
+locateModel engine;
+
+meshMotionModel noMeshMotion;
+
+regionModel allRegion;
+
+IOModel basicIO; 
+
+probeModel off;
+
+dataExchangeModel twoWayMPI;
+
+averagingModel dense;
+
+clockModel off;
+
+smoothingModel off;
+
+forceModels
+(
+    DiFeliceDrag
+    gradPForce
+    viscForce
+);
+
+momCoupleModels
+(
+    implicitCouple
+);
+
+turbulenceModelType turbulenceProperties;
+
+//===========================================================================//
+// sub-model properties
+
+constDiffSmoothingProps
+{
+    lowerLimit 0.0;
+    upperLimit 1e99;
+    smoothingLength 3e-4;
+} 
+
+implicitCoupleProps
+{
+    velFieldName "U";
+    granVelFieldName "Us";
+    voidfractionFieldName "voidfraction";
+}
+
+DiFeliceDragProps
+{
+    velFieldName "U";
+    voidfractionFieldName "voidfraction";
+    granVelFieldName "Us";
+    implForceDEM false;
+    verbose true;
+}
+
+gradPForceProps
+{
+    pFieldName "p";
+    velocityFieldName "U";
+    interpolation true;
+}
+
+viscForceProps
+{
+    velocityFieldName "U";
+    interpolation true;
+}
+
+SchillerNaumannDragProps
+{
+    velFieldName "U";
+    densityFieldName "rho";
+}
+
+KochHillDragProps
+{
+    velFieldName "U";
+    densityFieldName "rho";
+    voidfractionFieldName "voidfraction";
+}
+
+MeiLiftProps
+{
+    velFieldName "U";
+    densityFieldName "rho";
+}
+
+ArchimedesProps
+{
+    densityFieldName "rho";
+    gravityFieldName "g";
+}
+
+virtualMassForceProps
+{
+    velFieldName "U";
+    densityFieldName "rho";
+}
+
+oneWayVTKProps
+{
+    couplingFilename "vtk_out%4.4d.vtk";
+    maxNumberOfParticles 30000;
+}
+
+"(twoWayMPIProps|M2MProps)"
+{
+liggghtsPath "../DEM/in.nearLeak_run";
+}
+
+twoWayFilesProps
+{
+    maxNumberOfParticles 1000000;
+    DEMts 1e-5;
+}
+
+centreProps
+{
+    alphaMin 0.30;
+}
+
+dividedProps
+{
+    alphaMin 0.3;
+}
+
+bigParticleProps
+{
+    maxCellsPerParticle 1000;
+    alphaMin 0.30;
+    scaleUpVol 1.0;
+}
+
+"(engineProps|turboEngineM2MProps)"
+{
+    treeSearch true;
+}
+
+// ************************************************************************* //
